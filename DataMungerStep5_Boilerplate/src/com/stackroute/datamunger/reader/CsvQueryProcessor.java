@@ -1,0 +1,328 @@
+package com.stackroute.datamunger.reader;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import com.stackroute.datamunger.query.DataSet;
+import com.stackroute.datamunger.query.DataTypeDefinitions;
+import com.stackroute.datamunger.query.Filter;
+import com.stackroute.datamunger.query.Header;
+import com.stackroute.datamunger.query.Row;
+import com.stackroute.datamunger.query.RowDataTypeDefinitions;
+import com.stackroute.datamunger.query.parser.QueryParameter;
+import com.stackroute.datamunger.query.parser.Restriction;
+
+public class CsvQueryProcessor implements QueryProcessingEngine {
+
+	/*
+	 * This method will take QueryParameter object as a parameter which contains the
+	 * parsed query and will process and populate the ResultSet
+	 */
+	public DataSet getResultSet(final QueryParameter queryParameter) {
+
+		DataSet dataSet = null;
+		BufferedReader bufferReader = null;
+		int lineCount = 0;
+		String strCurrentLine = null;
+		StringBuffer headerBfr;
+		StringBuffer dataRowDataTypeBfr;
+		String[] headerStrArray = null;
+		String[] dataRowDataTypeStrArray = null;
+		Header header = null;
+		HashMap<Integer, String> dataTypeDefinitionsMap = null;
+		@SuppressWarnings("unused")
+		RowDataTypeDefinitions rowDataTypeDefinitions = null;
+		long rownum = 1;
+		/*
+		 * initialize BufferedReader to read from the file which is mentioned in
+		 * QueryParameter. Consider Handling Exception related to file reading.
+		 */
+		try {
+			bufferReader = new BufferedReader(new FileReader(queryParameter.getFileName()));
+
+			/*
+			 * read the first line which contains the header. Please note that the headers
+			 * can contain spaces in between them. For eg: city, winner
+			 */
+
+			/*
+			 * read the next line which contains the first row of data. We are reading this
+			 * line so that we can determine the data types of all the fields. Please note
+			 * that ipl.csv file contains null value in the last column. If you do not
+			 * consider this while splitting, this might cause exceptions later
+			 */
+			headerBfr = new StringBuffer();
+			dataRowDataTypeBfr = new StringBuffer();
+			bufferReader.mark(1);
+			lineCount = 1;
+			while ((strCurrentLine = bufferReader.readLine()) != null && lineCount < 3) {
+				// read the first line
+				if (lineCount == 1) {
+					headerBfr.append(strCurrentLine);
+					headerStrArray = headerBfr.toString().trim().split("\\s*,\\s*");
+				}
+				// read the second line
+				else if (lineCount == 2) {
+					dataRowDataTypeBfr.append(strCurrentLine);
+					dataRowDataTypeStrArray = dataRowDataTypeBfr.toString().trim().split("\\s*,\\s*",
+							headerStrArray.length);
+				}
+				lineCount++;
+			}
+			bufferReader.reset();
+
+			/*
+			 * populate the header Map object from the header array. header map is having
+			 * data type <String,Integer> to contain the header and it's index.
+			 */
+			final HashMap<String, Integer> headerMap = new HashMap<String, Integer>();
+			for (int i = 0; i < headerStrArray.length; i++) {
+				headerMap.put(headerStrArray[i], i);
+			}
+			header = new Header(headerMap);
+
+			/*
+			 * We have read the first line of text already and kept it in an array. Now, we
+			 * can populate the RowDataTypeDefinition Map object. RowDataTypeDefinition map
+			 * is having data type <Integer,String> to contain the index of the field and
+			 * it's data type. To find the dataType by the field value, we will use
+			 * getDataType() method of DataTypeDefinitions class
+			 */
+			dataTypeDefinitionsMap = new HashMap<Integer, String>();
+			for (int i = 0; i < dataRowDataTypeStrArray.length; i++) {
+				dataTypeDefinitionsMap.put(i, DataTypeDefinitions.getDataType(dataRowDataTypeStrArray[i]).toString());
+			}
+			rowDataTypeDefinitions = new RowDataTypeDefinitions(dataTypeDefinitionsMap);
+
+			/*
+			 * once we have the header and dataTypeDefinitions maps populated, we can start
+			 * reading from the first line. We will read one line at a time, then check
+			 * whether the field values satisfy the conditions mentioned in the query,if
+			 * yes, then we will add it to the resultSet. Otherwise, we will continue to
+			 * read the next line. We will continue this till we have read till the last
+			 * line of the CSV file.
+			 */
+
+			/* reset the buffered reader so that it can start reading from the first line */
+
+			/*
+			 * skip the first line as it is already read earlier which contained the header
+			 */
+
+			/* read one line at a time from the CSV file till we have any lines left */
+
+			/*
+			 * once we have read one line, we will split it into a String Array. This array
+			 * will continue all the fields of the row. Please note that fields might
+			 * contain spaces in between. Also, few fields might be empty.
+			 */
+
+			/*
+			 * if there are where condition(s) in the query, test the row fields against
+			 * those conditions to check whether the selected row satisfies the conditions
+			 */
+
+			/*
+			 * from QueryParameter object, read one condition at a time and evaluate the
+			 * same. For evaluating the conditions, we will use evaluateExpressions() method
+			 * of Filter class. Please note that evaluation of expression will be done
+			 * differently based on the data type of the field. In case the query is having
+			 * multiple conditions, you need to evaluate the overall expression i.e. if we
+			 * have OR operator between two conditions, then the row will be selected if any
+			 * of the condition is satisfied. However, in case of AND operator, the row will
+			 * be selected only if both of them are satisfied.
+			 */
+
+			/*
+			 * check for multiple conditions in where clause for eg: where salary>20000 and
+			 * city=Bangalore for eg: where salary>20000 or city=Bangalore and dept!=Sales
+			 */
+
+			boolean condition[] = null;
+			String logicalOperators[] = null;
+			List<String> logicalOperatorslist = null;
+			// logical operators
+			logicalOperatorslist = queryParameter.getLogicalOperators();
+			if (logicalOperatorslist != null) {
+				logicalOperators = new String[logicalOperatorslist.size()];
+				int m = 0;
+				for (final String string : logicalOperatorslist) {
+					logicalOperators[m] = string;
+					m++;
+				}
+			}
+
+			lineCount = 1;
+			dataSet = new DataSet();
+			while ((strCurrentLine = bufferReader.readLine()) != null) {
+				if (lineCount == 1) {
+					// Ignore header line
+					lineCount++;
+					continue;
+				}
+
+				Filter filter = null;
+				int index = 0;
+				String data[] = null;
+				final StringBuffer dataBfr = new StringBuffer();
+				boolean finalcondition = false;
+				final Row rowMapObj = new Row();
+				strCurrentLine = strCurrentLine.replaceAll(",,", ", ,");
+				dataBfr.append(strCurrentLine);
+
+				data = dataBfr.toString().trim().split(",", headerStrArray.length);
+
+				// restrictions
+				if (queryParameter.getRestrictions() != null) {
+					condition = new boolean[queryParameter.getRestrictions().size()];
+					Iterator<Restriction> restrictionIter = null;
+					filter = new Filter();
+					restrictionIter = queryParameter.getRestrictions().iterator();
+					int n = 0;
+					while (restrictionIter.hasNext()) {
+						final Iterator<Map.Entry<String, Integer>> headerIter = sortByValue(header.getHeaders())
+								.entrySet().iterator();
+						final Restriction rest = restrictionIter.next();
+						while (headerIter.hasNext()) {
+							final Map.Entry<String, Integer> myEntry = headerIter.next();
+							if (myEntry.getKey().equals(rest.getPropertyName())) {
+								index = myEntry.getValue();
+								break;
+							}
+						}
+						condition[n] = filter.evaluateExpressions(rest.getPropertyValue(), rest.getCondition(),
+								data[index],
+								DataTypeDefinitions.getDataType(dataRowDataTypeStrArray[index]).toString());
+						n++;
+					}
+				}
+
+				@SuppressWarnings("unused")
+				boolean stepout = false;
+				// final condition
+				if (condition != null && condition.length > 1) {
+					int counter = 0;
+					for (int i = 0; i < logicalOperators.length; i++) {
+						for (int j = 0; j < condition.length - 1; j++) {
+							if (logicalOperators[i].equals("and")) {
+								finalcondition = condition[counter] & condition[counter + 1];
+								break;
+							} else if (logicalOperators[i].equals("or")) {
+								finalcondition = condition[counter] | condition[counter + 1];
+								if (finalcondition) {
+									stepout = true;
+								}
+								break;
+							}
+						}
+						if (stepout = true) {
+							break;
+						}
+						counter++;
+					}
+				} else if (condition != null && condition.length == 1) {
+					finalcondition = condition[0];
+				} else {
+					finalcondition = true;
+				}
+
+				// add data to object
+				if (!finalcondition) {
+					continue;
+				} else {
+					String[] field = null;
+					List<String> fields = null;
+					int l = 0;
+
+					// get fields
+					fields = queryParameter.getFields();
+					field = new String[fields.size()];
+					l = 0;
+					for (final String string : fields) {
+						field[l] = string;
+						l++;
+					}
+
+					// get all columns
+					if (field[0].equals("*")) {
+						for (int i = 0; i < headerStrArray.length; i++) {
+							rowMapObj.put(headerStrArray[i], data[i]);
+						}
+
+					}
+
+					// get selected columns
+					else {
+						l = 0;
+						for (int i = 0; i < headerStrArray.length; i++) {
+							for (int j = 0; j < field.length; j++) {
+								if (headerStrArray[i].equals(field[j])) {
+									rowMapObj.put(headerStrArray[i], data[i]);
+									l++;
+								}
+							}
+						}
+					}
+
+					dataSet.put(rownum++, rowMapObj);
+				}
+			}
+
+			/*
+			 * if the overall condition expression evaluates to true, then we need to check
+			 * if all columns are to be selected(select *) or few columns are to be
+			 * selected(select col1,col2). In either of the cases, we will have to populate
+			 * the row map object. Row Map object is having type <String,String> to contain
+			 * field Index and field value for the selected fields. Once the row object is
+			 * populated, add it to DataSet Map Object. DataSet Map object is having type
+			 * <Long,Row> to hold the rowId (to be manually generated by incrementing a Long
+			 * variable) and it's corresponding Row Object.
+			 */
+
+			bufferReader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		/* return data set object */
+		return dataSet;
+	}
+
+	/**
+	 * Method for sorting hashmap by values
+	 * 
+	 * @param unsortMap
+	 * @return
+	 */
+	private static Map<String, Integer> sortByValue(final Map<String, Integer> unsortMap) {
+
+		// 1. Convert Map to List of Map
+		final List<Map.Entry<String, Integer>> list = new LinkedList<Map.Entry<String, Integer>>(unsortMap.entrySet());
+
+		// 2. Sort list with Collections.sort(), provide a custom Comparator
+		// Try switch the obj1 obj2 position for a different order
+		Collections.sort(list, new Comparator<Map.Entry<String, Integer>>() {
+			public int compare(final Map.Entry<String, Integer> obj1, final Map.Entry<String, Integer> obj2) {
+				return (obj1.getValue()).compareTo(obj2.getValue());
+			}
+		});
+
+		// 3. Loop the sorted list and put it into a new insertion order Map
+		// LinkedHashMap
+		final Map<String, Integer> sortedMap = new LinkedHashMap<String, Integer>();
+		for (final Map.Entry<String, Integer> entry : list) {
+			sortedMap.put(entry.getKey(), entry.getValue());
+		}
+
+		return sortedMap;
+	}
+
+}
